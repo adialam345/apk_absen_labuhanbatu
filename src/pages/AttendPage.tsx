@@ -60,8 +60,18 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
     error: null
   });
 
-  // 1. Ambil Koordinat Kantor dari API berdasarkan OPD User Login
+  const [todayData, setTodayData] = useState<any>(null);
+
+  // 1. Ambil Status Presensi Hari Ini (Otomatis ke Pulang jika sudah Masuk)
   useEffect(() => {
+    ApiService.getTodayAttendance(user.nip).then((today) => {
+      setTodayData(today);
+      if (today.masuk && !today.pulang) {
+        setAttendanceType('Pulang');
+      }
+    });
+
+    // Ambil Koordinat Kantor dari API berdasarkan OPD User Login
     ApiService.getOfficeCoordinates(user.id_opd, user.nip).then((coord) => {
       setOfficeCoord(coord);
       randomizeOfficeLocation(coord);
@@ -213,6 +223,19 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
           Presensi Pulang
         </button>
       </div>
+
+      {/* Info Otomatisasi Status */}
+      {todayData?.masuk && (
+        <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <span>Presensi Masuk tercatat: <strong>{todayData.masuk}</strong></span>
+          </div>
+          <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
+            {todayData?.pulang ? 'Lengkap' : 'Otomatis Pulang'}
+          </span>
+        </div>
+      )}
 
       {/* Error Alert */}
       {errorMessage && (

@@ -116,7 +116,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           className="w-full min-h-[44px] mt-4 py-3 px-4 bg-brand-800 hover:bg-brand-900 text-white font-semibold rounded-xl flex items-center justify-center gap-2 transition-colors text-sm"
         >
           <CheckCircle2 className="w-4 h-4 text-white" />
-          <span>Lakukan Presensi Sekarang</span>
+          <span>
+            {!todayData?.masuk
+              ? 'Lakukan Presensi Masuk'
+              : !todayData?.pulang
+              ? 'Lakukan Presensi Pulang'
+              : 'Presensi Hari Ini Lengkap'}
+          </span>
         </button>
       </div>
 
