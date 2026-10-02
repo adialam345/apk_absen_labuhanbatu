@@ -87,14 +87,16 @@ export const SupabaseService = {
   /**
    * Menambahkan NIP Baru ke Whitelist (Khusus Admin)
    */
-  async addRegisteredUser(user: { nip: string; nama: string; opd?: string; role: 'admin' | 'pegawai' }): Promise<{ success: boolean; message: string }> {
+  async addRegisteredUser(user: { nip: string; nama?: string; opd?: string; role: 'admin' | 'pegawai' }): Promise<{ success: boolean; message: string }> {
     try {
       const client = await getSupabase();
+      const cleanNip = user.nip.trim();
+      const cleanNama = user.nama?.trim() || `Pegawai (${cleanNip})`;
       const { error } = await client
         .from('registered_users')
         .insert([{
-          nip: user.nip.trim(),
-          nama: user.nama.trim(),
+          nip: cleanNip,
+          nama: cleanNama,
           opd: user.opd?.trim() || 'Pemerintah Kabupaten Labuhanbatu',
           role: user.role,
           is_active: true,
@@ -107,7 +109,7 @@ export const SupabaseService = {
         }
         return { success: false, message: error.message };
       }
-      return { success: true, message: `NIP ${user.nip} berhasil didaftarkan!` };
+      return { success: true, message: `NIP ${cleanNip} berhasil didaftarkan!` };
     } catch (err: any) {
       return { success: false, message: err.message || 'Gagal menambahkan NIP' };
     }

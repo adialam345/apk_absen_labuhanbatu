@@ -13,11 +13,9 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Form State
+  // Form State (Hanya NIP dan Peran)
   const [showAddModal, setShowAddModal] = useState(false);
   const [newNip, setNewNip] = useState('');
-  const [newNama, setNewNama] = useState('');
-  const [newOpd, setNewOpd] = useState('Dinas Komunikasi dan Informatika');
   const [newRole, setNewRole] = useState<'admin' | 'pegawai'>('pegawai');
   const [formLoading, setFormLoading] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -46,8 +44,8 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newNip.trim() || !newNama.trim()) {
-      setFeedbackMessage({ type: 'error', text: 'NIP dan Nama Pegawai wajib diisi!' });
+    if (!newNip.trim()) {
+      setFeedbackMessage({ type: 'error', text: 'Nomor Induk Pegawai (NIP) wajib diisi!' });
       return;
     }
 
@@ -55,9 +53,7 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
     setFeedbackMessage(null);
 
     const result = await SupabaseService.addRegisteredUser({
-      nip: newNip,
-      nama: newNama,
-      opd: newOpd,
+      nip: newNip.trim(),
       role: newRole
     });
 
@@ -66,7 +62,6 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
     if (result.success) {
       setFeedbackMessage({ type: 'success', text: result.message });
       setNewNip('');
-      setNewNama('');
       fetchUsers();
       setTimeout(() => {
         setShowAddModal(false);
@@ -201,20 +196,26 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
 
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <h4 className="text-xs font-bold text-slate-900 truncate">
-                        {item.nama}
+                      <h4 className="text-xs font-bold font-mono text-slate-900">
+                        {item.nip}
                       </h4>
-                      {item.role === 'admin' && (
-                        <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 font-bold text-[9px] border border-amber-200">
-                          ADMIN
-                        </span>
-                      )}
+                      <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] border ${
+                        item.role === 'admin'
+                          ? 'bg-amber-50 text-amber-800 border-amber-200'
+                          : 'bg-blue-50 text-blue-800 border-blue-200'
+                      }`}>
+                        {item.role === 'admin' ? 'ADMIN' : 'PEGAWAI'}
+                      </span>
                     </div>
-                    <p className="text-xs font-mono font-semibold text-slate-600 mt-0.5">{item.nip}</p>
-                    <div className="flex items-center gap-1 text-[11px] text-slate-500 mt-1">
-                      <Building2 className="w-3 h-3 text-slate-400 flex-shrink-0" />
-                      <span className="truncate max-w-[200px]">{item.opd || 'Pemerintah Kab. Labuhanbatu'}</span>
-                    </div>
+                    {item.nama && !item.nama.startsWith('Pegawai (') && (
+                      <p className="text-xs font-medium text-slate-700 mt-0.5">{item.nama}</p>
+                    )}
+                    {item.opd && (
+                      <div className="flex items-center gap-1 text-[10px] text-slate-500 mt-0.5">
+                        <Building2 className="w-3 h-3 text-slate-400 flex-shrink-0" />
+                        <span className="truncate max-w-[200px]">{item.opd}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -283,30 +284,10 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
                   value={newNip}
                   onChange={(e) => setNewNip(e.target.value)}
                   placeholder="Contoh: 198501012010011001"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 px-3 text-xs text-slate-900 focus:outline-none focus:border-brand-700"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 px-3 text-xs text-slate-900 font-mono focus:bg-white focus:outline-none focus:border-brand-700 min-h-[44px]"
+                  autoFocus
                 />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Nama Lengkap Pegawai</label>
-                <input
-                  type="text"
-                  value={newNama}
-                  onChange={(e) => setNewNama(e.target.value)}
-                  placeholder="Contoh: Ahmad Fauzi, S.Kom"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 px-3 text-xs text-slate-900 focus:outline-none focus:border-brand-700"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Unit Kerja (OPD)</label>
-                <input
-                  type="text"
-                  value={newOpd}
-                  onChange={(e) => setNewOpd(e.target.value)}
-                  placeholder="Contoh: Dinas Komunikasi dan Informatika"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 px-3 text-xs text-slate-900 focus:outline-none focus:border-brand-700"
-                />
+                <p className="text-[10px] text-slate-500 mt-1">Nama & Unit Kerja akan disinkronkan otomatis saat pegawai login.</p>
               </div>
 
               <div>
@@ -314,7 +295,7 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as 'admin' | 'pegawai')}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2 px-3 text-xs text-slate-900 focus:outline-none focus:border-brand-700"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl py-2.5 px-3 text-xs text-slate-900 font-semibold focus:bg-white focus:outline-none focus:border-brand-700 min-h-[44px]"
                 >
                   <option value="pegawai">Pegawai ASN (Biasa)</option>
                   <option value="admin">Administrator (Akses Whitelist)</option>
