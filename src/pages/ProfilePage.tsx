@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { ApiService } from '../lib/api';
-import { User, Lock, LogOut, Settings, KeyRound, CheckCircle2, AlertCircle, Shield, Users, Building } from 'lucide-react';
+import { User, Lock, LogOut, Settings, KeyRound, Shield, Users } from 'lucide-react';
+import { Alert } from '../components/Alert';
 
 interface ProfilePageProps {
   user: UserProfile;
@@ -184,17 +185,15 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout, onOpen
             </div>
 
             {passwordError && (
-              <div className="mb-3 p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-800 text-xs flex items-center gap-2" role="alert">
-                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                <span>{passwordError}</span>
-              </div>
+              <Alert variant="error" className="mb-3" onClose={() => setPasswordError(null)}>
+                {passwordError}
+              </Alert>
             )}
 
             {passwordSuccess && (
-              <div className="mb-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>{passwordSuccess}</span>
-              </div>
+              <Alert variant="success" className="mb-3" onClose={() => setPasswordSuccess(null)}>
+                {passwordSuccess}
+              </Alert>
             )}
 
             <form onSubmit={handleChangePassword} className="space-y-3">

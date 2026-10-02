@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile, OfficeCoordinate, LocationState } from '../types';
 import { ApiService } from '../lib/api';
 import { SupabaseService } from '../lib/supabase';
-import { Camera, MapPin, CheckCircle2, AlertCircle, Send, RotateCcw, Shield, Shuffle, Video, VideoOff } from 'lucide-react';
+import { Camera, MapPin, CheckCircle2, Send, RotateCcw, Shield, Shuffle, Video, VideoOff } from 'lucide-react';
+import { Alert } from '../components/Alert';
 
 interface AttendPageProps {
   user: UserProfile;
@@ -306,23 +307,21 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
 
       {/* Info Otomatisasi Status */}
       {todayData?.masuk && (
-        <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+        <Alert variant="success" className="mb-1">
+          <div className="flex items-center justify-between w-full">
             <span>Presensi Masuk tercatat: <strong>{todayData.masuk}</strong></span>
+            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-md ml-2 flex-shrink-0">
+              {todayData?.pulang ? 'Lengkap' : 'Otomatis Pulang'}
+            </span>
           </div>
-          <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-            {todayData?.pulang ? 'Lengkap' : 'Otomatis Pulang'}
-          </span>
-        </div>
+        </Alert>
       )}
 
       {/* Error Alert */}
       {errorMessage && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-red-800 text-xs" role="alert">
-          <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600" />
-          <span>{errorMessage}</span>
-        </div>
+        <Alert variant="error" onClose={() => setErrorMessage(null)}>
+          {errorMessage}
+        </Alert>
       )}
 
       {/* 📸 View Kamera Live & Preview Foto */}

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, WorkSchedule } from '../types';
 import { ApiService } from '../lib/api';
-import { CalendarDays, Clock, Building2, AlertCircle } from 'lucide-react';
+import { CalendarDays, Clock, Building2 } from 'lucide-react';
+import { Alert } from '../components/Alert';
 
 interface SchedulePageProps {
   user: UserProfile;
@@ -38,12 +39,9 @@ export const SchedulePage: React.FC<SchedulePageProps> = ({ user }) => {
       </div>
 
       {/* Notice info */}
-      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-amber-900 text-xs">
-        <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-amber-700" />
-        <span>
-          Lakukan presensi masuk dan pulang sesuai rentang toleransi jam kerja agar status kehadiran tercatat tepat waktu.
-        </span>
-      </div>
+      <Alert variant="warning">
+        Lakukan presensi masuk dan pulang sesuai rentang toleransi jam kerja agar status kehadiran tercatat tepat waktu.
+      </Alert>
 
       {/* List of Schedules */}
       <div className="space-y-2.5">

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StorageService } from '../lib/storage';
 import { SupabaseService } from '../lib/supabase';
 import { Settings, Database, Server, Save, CheckCircle2, ArrowLeft, RefreshCw, Copy, Check } from 'lucide-react';
+import { Alert } from '../components/Alert';
 
 interface SettingsPageProps {
   onBack: () => void;
@@ -89,10 +90,9 @@ CREATE TABLE IF NOT EXISTS public.registered_users (
       </div>
 
       {savedSuccess && (
-        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center gap-2" role="alert">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-          <span>Pengaturan berhasil disimpan.</span>
-        </div>
+        <Alert variant="success" onClose={() => setSavedSuccess(false)}>
+          Pengaturan berhasil disimpan.
+        </Alert>
       )}
 
       {/* Form Konfigurasi */}
@@ -136,9 +136,12 @@ CREATE TABLE IF NOT EXISTS public.registered_users (
           </div>
 
           {supabaseStatus && (
-            <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs font-mono">
-              {supabaseStatus}
-            </div>
+            <Alert
+              variant={supabaseStatus.startsWith('Terhubung') ? 'success' : 'error'}
+              onClose={() => setSupabaseStatus(null)}
+            >
+              <span className="font-mono">{supabaseStatus}</span>
+            </Alert>
           )}
 
           <div>

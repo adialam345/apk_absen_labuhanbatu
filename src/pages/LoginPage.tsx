@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { ApiService } from '../lib/api';
 import { UserProfile } from '../types';
-import { Lock, User, AlertCircle, Building2, Server, KeyRound, UserCheck, ShieldAlert } from 'lucide-react';
+import { Lock, User, Building2, KeyRound, UserCheck } from 'lucide-react';
+import { Alert } from '../components/Alert';
 
 interface LoginPageProps {
   onLoginSuccess: (user: UserProfile) => void;
   onOpenSettings: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onOpenSettings }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -59,10 +60,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onOpenSett
         </div>
 
         {errorMessage && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2.5 text-red-800 text-xs" role="alert">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-600" />
-            <span className="leading-relaxed">{errorMessage}</span>
-          </div>
+          <Alert variant="error" className="mb-4" onClose={() => setErrorMessage(null)}>
+            {errorMessage}
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

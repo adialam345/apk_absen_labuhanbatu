@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RegisteredUser } from '../types';
 import { SupabaseService } from '../lib/supabase';
 import { UserPlus, Users, Search, Trash2, CheckCircle2, AlertCircle, RefreshCw, ArrowLeft, Power, Building2, Crown, User, Shield } from 'lucide-react';
+import { Alert } from '../components/Alert';
 
 interface AdminWhitelistPageProps {
   onBack: () => void;
@@ -265,21 +266,13 @@ export const AdminWhitelistPage: React.FC<AdminWhitelistPageProps> = ({ onBack }
             </div>
 
             {feedbackMessage && (
-              <div
-                className={`mb-3 p-2.5 rounded-lg text-xs flex items-center gap-2 ${
-                  feedbackMessage.type === 'success'
-                    ? 'bg-emerald-50 border border-emerald-200 text-emerald-800'
-                    : 'bg-red-50 border border-red-200 text-red-800'
-                }`}
-                role="alert"
+              <Alert
+                variant={feedbackMessage.type}
+                className="mb-3"
+                onClose={() => setFeedbackMessage(null)}
               >
-                {feedbackMessage.type === 'success' ? (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                ) : (
-                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-                )}
-                <span>{feedbackMessage.text}</span>
-              </div>
+                {feedbackMessage.text}
+              </Alert>
             )}
 
             <form onSubmit={handleAddUser} className="space-y-3">
