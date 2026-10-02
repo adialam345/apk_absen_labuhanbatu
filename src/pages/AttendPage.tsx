@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { UserProfile, OfficeCoordinate, LocationState } from '../types';
 import { ApiService } from '../lib/api';
 import { SupabaseService } from '../lib/supabase';
-import { Camera, MapPin, CheckCircle2, AlertCircle, RefreshCw, Send, X, Shield, Shuffle, Image as ImageIcon, Upload } from 'lucide-react';
+import { Camera, MapPin, CheckCircle2, AlertCircle, Send, RotateCcw, Shield, Shuffle, Video, VideoOff } from 'lucide-react';
 
 interface AttendPageProps {
   user: UserProfile;
@@ -40,13 +40,17 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
   const [officeCoord, setOfficeCoord] = useState<OfficeCoordinate | null>(null);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
-  const [photoSource, setPhotoSource] = useState<'camera' | 'gallery' | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
-  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  // Live Camera Video & Canvas Refs
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [cameraActive, setCameraActive] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const fallbackInputRef = useRef<HTMLInputElement | null>(null);
 
   const [location, setLocation] = useState<LocationState>({
     latitude: null,
@@ -62,7 +66,7 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
 
   const [todayData, setTodayData] = useState<any>(null);
 
-  // 1. Ambil Status Presensi Hari Ini (Otomatis ke Pulang jika sudah Masuk)
+  // 1. Inisialisasi Kamera Live & Data Presensi Hari Ini
   useEffect(() => {
     ApiService.getTodayAttendance(user.nip).then((today) => {
       setTodayData(today);
@@ -71,14 +75,104 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
       }
     });
 
-    // Ambil Koordinat Kantor dari API berdasarkan OPD User Login
     ApiService.getOfficeCoordinates(user.id_opd, user.nip).then((coord) => {
       setOfficeCoord(coord);
       randomizeOfficeLocation(coord);
     });
+
+    startCamera();
+
+    return () => {
+      stopCamera();
+    };
   }, [user]);
 
-  // 2. Fungsi Mengacak Koordinat dalam Radius 50m dari Titik Kantor
+  // Fungsi Menjalankan Stream Kamera Depan (Selfie)
+  const startCamera = async () => {
+    setCameraError(null);
+    try {
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 720 },
+            height: { ideal: 960 }
+          },
+          audio: false
+        });
+
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.play().catch(() => {});
+        }
+        setCameraActive(true);
+      } else {
+        setCameraError('Kamera web tidak didukung oleh browser ini.');
+      }
+    } catch (err: any) {
+      console.warn('Live camera access warning:', err);
+      setCameraActive(false);
+      setCameraError('Izin akses kamera belum diberikan. Klik tombol untuk mengaktifkan atau unggah foto.');
+    }
+  };
+
+  // Fungsi Menghentikan Stream Kamera
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    setCameraActive(false);
+  };
+
+  // Fungsi Mengambil Snapshot dari View Kamera
+  const captureLivePhoto = () => {
+    if (!videoRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current || document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Gambar frame video ke canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    setPhotoDataUrl(dataUrl);
+
+    canvas.toBlob((blob) => {
+      if (blob) setPhotoBlob(blob);
+    }, 'image/jpeg', 0.85);
+
+    stopCamera();
+  };
+
+  // Fungsi Ulang Foto (Membuka Kamera Kembali)
+  const retakePhoto = () => {
+    setPhotoDataUrl(null);
+    setPhotoBlob(null);
+    startCamera();
+  };
+
+  // Fallback jika kamera live gagal dibuka
+  const handleFallbackPhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoBlob(file);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoDataUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+    stopCamera();
+  };
+
+  // Fungsi Mengacak Koordinat dalam Radius 50m dari Titik Kantor
   const randomizeOfficeLocation = (coord?: OfficeCoordinate | null) => {
     const targetCoord = coord || officeCoord;
     if (!targetCoord) return;
@@ -106,23 +200,9 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
     }, 200);
   };
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>, source: 'camera' | 'gallery') => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPhotoBlob(file);
-    setPhotoSource(source);
-
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPhotoDataUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
   const handleSubmitAttendance = async () => {
     if (!photoBlob || !photoDataUrl) {
-      setErrorMessage('Harap ambil foto selfie atau pilih foto dari galeri terlebih dahulu.');
+      setErrorMessage('Harap ambil foto selfie terlebih dahulu melalui kamera.');
       return;
     }
 
@@ -139,7 +219,7 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
       const waktuAbsen = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
       // 1. Submit ke API Server Absensi Pemkab Labuhanbatu
-      const apiResult = await ApiService.submitAttendance({
+      await ApiService.submitAttendance({
         nip: user.nip,
         latitude: location.latitude,
         longitude: location.longitude,
@@ -192,7 +272,7 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
           Presensi {attendanceType} Berhasil
         </h2>
         <p className="text-slate-600 text-xs mt-2 max-w-xs leading-relaxed">
-          Data presensi dan bukti foto telah tercatat dalam sistem pada jarak {location.distance} meter dari titik kantor OPD.
+          Data presensi dan foto selfie telah tercatat pada jarak {location.distance} meter dari titik kantor OPD.
         </p>
       </div>
     );
@@ -245,87 +325,108 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
         </div>
       )}
 
-      {/* Box Foto Bukti */}
-      <div className="bg-white rounded-2xl p-5 border border-slate-200/90 shadow-sm flex flex-col items-center">
-        <div className="w-full flex items-center justify-between mb-3">
+      {/* 📸 View Kamera Live & Preview Foto */}
+      <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-sm flex flex-col items-center">
+        <div className="w-full flex items-center justify-between mb-2.5">
           <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
             <Camera className="w-4 h-4 text-brand-800" />
-            <span>Foto Bukti Kehadiran</span>
+            <span>{photoDataUrl ? 'Hasil Foto Selfie' : 'Kamera Selfie Langsung'}</span>
           </span>
           {photoDataUrl && (
             <button
-              onClick={() => { setPhotoDataUrl(null); setPhotoBlob(null); setPhotoSource(null); }}
-              className="text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1 min-h-[36px] px-1"
+              onClick={retakePhoto}
+              className="text-xs font-semibold text-brand-800 hover:text-brand-900 flex items-center gap-1 min-h-[36px] px-2"
             >
-              <X className="w-3.5 h-3.5" />
-              <span>Ganti Foto</span>
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Foto Ulang</span>
             </button>
           )}
         </div>
 
-        {/* Preview Foto */}
-        <div
-          className={`w-full h-52 rounded-xl border-2 border-dashed flex flex-col items-center justify-center relative overflow-hidden transition-colors ${
-            photoDataUrl
-              ? 'border-brand-700 bg-slate-900'
-              : 'border-slate-300 bg-slate-50'
-          }`}
-        >
+        {/* Viewport Kamera Live */}
+        <div className="w-full h-72 rounded-2xl bg-slate-900 overflow-hidden relative border border-slate-300 flex items-center justify-center">
           {photoDataUrl ? (
-            <>
-              <img src={photoDataUrl} alt="Bukti Presensi" className="w-full h-full object-cover" />
-              <div className="absolute bottom-2 left-2 px-2.5 py-1 rounded-md bg-slate-950/80 text-white text-[11px] font-medium flex items-center gap-1.5">
-                {photoSource === 'gallery' ? <ImageIcon className="w-3 h-3 text-slate-300" /> : <Camera className="w-3 h-3 text-slate-300" />}
-                <span>{photoSource === 'gallery' ? 'Foto dari Galeri' : 'Foto Kamera Langsung'}</span>
-              </div>
-            </>
+            /* Tampilan Hasil Jepretan */
+            <img
+              src={photoDataUrl}
+              alt="Hasil Foto Presensi"
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <div className="flex flex-col items-center p-4 text-center">
-              <div className="w-12 h-12 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center mb-2">
-                <Upload className="w-5 h-5" />
+            /* Stream Kamera Live */
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover mirror"
+                style={{ transform: 'scaleX(-1)' }}
+              />
+
+              {/* Garis Bingkai Wajah */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-44 h-56 border-2 border-dashed border-white/60 rounded-full"></div>
               </div>
-              <span className="text-xs font-semibold text-slate-800">Unggah atau Ambil Foto</span>
-              <span className="text-[11px] text-slate-500 mt-0.5">Gunakan kamera selfie atau pilih dari galeri HP</span>
-            </div>
+
+              {/* Status Live Indicator */}
+              <div className="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-slate-950/70 text-white text-[11px] font-medium flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span>Live View</span>
+              </div>
+
+              {/* Fallback Jika Kamera Gagal Diaktifkan */}
+              {!cameraActive && cameraError && (
+                <div className="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center p-4 text-center z-10">
+                  <VideoOff className="w-10 h-10 text-slate-400 mb-2" />
+                  <p className="text-xs text-slate-200 mb-3">{cameraError}</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={startCamera}
+                      className="px-3 py-2 bg-brand-800 hover:bg-brand-900 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5"
+                    >
+                      <Video className="w-4 h-4" />
+                      <span>Coba Lagi</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fallbackInputRef.current?.click()}
+                      className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-semibold"
+                    >
+                      Buka Kamera Native
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
-        {/* Pilihan Metode Foto */}
-        <div className="w-full grid grid-cols-2 gap-2 mt-3">
-          <button
-            type="button"
-            onClick={() => cameraInputRef.current?.click()}
-            className="min-h-[44px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-200"
-          >
-            <Camera className="w-4 h-4 text-slate-700" />
-            <span>Kamera Selfie</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => galleryInputRef.current?.click()}
-            className="min-h-[44px] py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-colors border border-slate-200"
-          >
-            <ImageIcon className="w-4 h-4 text-slate-700" />
-            <span>Pilih Galeri</span>
-          </button>
-        </div>
-
+        {/* Hidden Canvas untuk Snapshot */}
+        <canvas ref={canvasRef} className="hidden" />
         <input
-          ref={cameraInputRef}
+          ref={fallbackInputRef}
           type="file"
           accept="image/*"
           capture="user"
-          onChange={(e) => handlePhotoSelect(e, 'camera')}
+          onChange={handleFallbackPhotoSelect}
           className="hidden"
         />
-        <input
-          ref={galleryInputRef}
-          type="file"
-          accept="image/*"
-          onChange={(e) => handlePhotoSelect(e, 'gallery')}
-          className="hidden"
-        />
+
+        {/* Tombol Shutter Jepret Foto */}
+        {!photoDataUrl && (
+          <div className="mt-3 w-full flex items-center justify-center">
+            <button
+              type="button"
+              onClick={captureLivePhoto}
+              className="w-full min-h-[46px] py-3 px-4 bg-brand-800 hover:bg-brand-900 active:bg-brand-950 text-white font-semibold rounded-xl text-xs flex items-center justify-center gap-2 transition-colors shadow-sm"
+            >
+              <Camera className="w-4 h-4" />
+              <span>Ambil Foto Selfie Sekarang</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Validasi Titik Lokasi & Radius OPD */}
@@ -387,7 +488,7 @@ export const AttendPage: React.FC<AttendPageProps> = ({ user, onSuccess }) => {
         )}
       </div>
 
-      {/* Tombol Kirim */}
+      {/* Tombol Kirim Presensi */}
       <button
         onClick={handleSubmitAttendance}
         disabled={submitting || !photoBlob}
