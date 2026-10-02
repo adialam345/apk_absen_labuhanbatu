@@ -80,17 +80,9 @@ export function App() {
           <LoginPage
             onLoginSuccess={(u) => setUser(u)}
             onOpenSettings={() => setShowSettings(true)}
+            onOpenDebug={() => setShowDebug(true)}
           />
         )}
-
-        {/* Floating Debug Button on Login Screen */}
-        <button
-          onClick={() => setShowDebug(true)}
-          className="fixed bottom-4 right-4 z-40 p-3 bg-slate-950/90 text-emerald-400 rounded-2xl shadow-xl border border-slate-700 flex items-center gap-1.5 text-xs font-mono font-bold active:scale-95 transition-all"
-        >
-          <Terminal className="w-4 h-4" />
-          <span>DEBUG LOGS</span>
-        </button>
 
         <DebugModal isOpen={showDebug} onClose={() => setShowDebug(false)} />
 

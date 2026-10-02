@@ -7,13 +7,26 @@ import { Alert } from '../components/Alert';
 interface LoginPageProps {
   onLoginSuccess: (user: UserProfile) => void;
   onOpenSettings: () => void;
+  onOpenDebug?: () => void;
 }
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onOpenDebug }) => {
   const [nip, setNip] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [logoTapCount, setLogoTapCount] = useState(0);
+
+  const handleLogoTap = () => {
+    const nextCount = logoTapCount + 1;
+    if (nextCount >= 5) {
+      setLogoTapCount(0);
+      if (onOpenDebug) onOpenDebug();
+    } else {
+      setLogoTapCount(nextCount);
+      setTimeout(() => setLogoTapCount(0), 3000);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,9 +52,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-slate-100/70 flex flex-col justify-between p-4 max-w-md mx-auto">
       {/* Header Lembaga / Pemerintah */}
       <div className="pt-8 pb-3 text-center">
-        <div className="w-16 h-16 bg-brand-800 text-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-sm">
+        <button
+          type="button"
+          onClick={handleLogoTap}
+          className="w-16 h-16 bg-brand-800 text-white rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-sm active:scale-95 transition-transform cursor-default"
+          title="OLA Labuhanbatu"
+        >
           <Building2 className="w-8 h-8 text-white" />
-        </div>
+        </button>
         <h1 className="text-xl font-bold text-slate-900 tracking-tight">
           OLA Labuhanbatu
         </h1>
