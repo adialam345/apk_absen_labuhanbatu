@@ -1,0 +1,176 @@
+{
+  "info": {
+    "name": "Absensi Online Labuhanbatu (OLA) API",
+    "_postman_id": "c3e98124-7622-4821-bc34-ola-labuhanbatu",
+    "description": "Koleksi Postman REST API Aplikasi Absensi Online Labuhanbatu v2.0.1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Login / Autentikasi",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "nip", "value": "198501012010011001", "type": "text" },
+            { "key": "password", "value": "password123", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/auth",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "auth"]
+        }
+      }
+    },
+    {
+      "name": "2. Titik Koordinat & Radius Kantor",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "id_opd", "value": "12", "type": "text" },
+            { "key": "nip", "value": "198501012010011001", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/koordinat",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "koordinat"]
+        }
+      }
+    },
+    {
+      "name": "3. Submit Presensi (Masuk / Pulang)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "nip", "value": "198501012010011001", "type": "text" },
+            { "key": "latitude", "value": "2.095431", "type": "text" },
+            { "key": "longitude", "value": "99.823412", "type": "text" },
+            { "key": "jarak", "value": "15.4", "type": "text" },
+            { "key": "stsLokasi", "value": "Di Wilayah Kantor", "type": "text" },
+            { "key": "waktu_absen", "value": "07:45:12", "type": "text" },
+            { "key": "status", "value": "Masuk", "type": "text" },
+            { "key": "foto", "type": "file", "src": "" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/registerabsen",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "registerabsen"]
+        }
+      }
+    },
+    {
+      "name": "4. Status Absen Hari Ini",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "nip", "value": "198501012010011001", "type": "text" },
+            { "key": "tgl", "value": "2026-10-02", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/absenTodday",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "absenTodday"]
+        }
+      }
+    },
+    {
+      "name": "5. Riwayat / Daftar Rekap Absen",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "nip", "value": "198501012010011001", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/daftarAbsen",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "daftarAbsen"]
+        }
+      }
+    },
+    {
+      "name": "6. Master Jadwal Jam Kerja",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "id_opd", "value": "12", "type": "text" },
+            { "key": "nip", "value": "198501012010011001", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/jadwal",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "jadwal"]
+        }
+      }
+    },
+    {
+      "name": "7. Update Foto Profil",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "nip", "value": "198501012010011001", "type": "text" },
+            { "key": "foto", "type": "file", "src": "" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/updateprofil",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "updateprofil"]
+        }
+      }
+    },
+    {
+      "name": "8. Ganti Password",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "nip", "value": "198501012010011001", "type": "text" },
+            { "key": "password", "value": "password_lama", "type": "text" },
+            { "key": "passwordNew", "value": "password_baru", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "http://ola.labuhanbatukab.go.id/api/chagePass",
+          "protocol": "http",
+          "host": ["ola", "labuhanbatukab", "go", "id"],
+          "path": ["api", "chagePass"]
+        }
+      }
+    }
+  ]
+}
