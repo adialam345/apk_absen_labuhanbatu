@@ -162,16 +162,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onOpenSett
             </button>
           </div>
         </div>
-
-        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-end">
-          <button
-            onClick={onOpenSettings}
-            className="text-xs text-brand-700 hover:text-brand-900 font-medium flex items-center gap-1 min-h-[36px] px-2"
-          >
-            <Server className="w-3.5 h-3.5" />
-            <span>Pengaturan Server</span>
-          </button>
-        </div>
       </div>
 
       {/* Footer */}

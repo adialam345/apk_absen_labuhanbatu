@@ -138,20 +138,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ user, onLogout, onOpen
           </div>
         </button>
 
-        <button
-          onClick={onOpenSettings}
-          className="w-full min-h-[44px] p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-              <Settings className="w-4 h-4" />
+        {/* Khusus Akun Admin: Pengaturan Server & Supabase */}
+        {user.role === 'admin' && (
+          <button
+            onClick={onOpenSettings}
+            className="w-full min-h-[44px] p-3.5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
+                <Settings className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-900 block">Pengaturan Server</span>
+                <span className="text-[10px] text-slate-500 block">Konfigurasi endpoint & Supabase (Khusus Admin)</span>
+              </div>
             </div>
-            <div>
-              <span className="text-xs font-semibold text-slate-900 block">Pengaturan Server</span>
-              <span className="text-[10px] text-slate-500 block">Konfigurasi endpoint & Supabase</span>
-            </div>
-          </div>
-        </button>
+          </button>
+        )}
       </div>
 
       {/* Tombol Logout */}
